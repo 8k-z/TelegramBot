@@ -1,0 +1,30 @@
+# Environment
+.env
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+
+# Temporary files
+temp/
+storage/
+*.tmp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Telegram Bot API data
+telegram-bot-api-data/
