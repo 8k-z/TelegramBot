@@ -9,7 +9,20 @@ from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 import yt_dlp
 
-from config import TEMP_DIR, MAX_FILE_SIZE_MB
+from config import TEMP_DIR, MAX_FILE_SIZE_MB, COOKIES_FROM_BROWSER, COOKIES_FILE
+
+
+def get_cookie_opts() -> dict:
+    """Get yt-dlp options for cookie authentication."""
+    opts = {}
+    
+    # Prefer cookies file if provided
+    if COOKIES_FILE and Path(COOKIES_FILE).exists():
+        opts['cookiefile'] = COOKIES_FILE
+    elif COOKIES_FROM_BROWSER:
+        opts['cookiesfrombrowser'] = (COOKIES_FROM_BROWSER, None, None, None)
+    
+    return opts
 
 
 def get_user_download_dir(user_id: int) -> Path:
@@ -33,6 +46,7 @@ async def get_video_info(url: str) -> Dict[str, Any]:
         'quiet': True,
         'no_warnings': True,
         'extract_flat': False,
+        **get_cookie_opts(),  # Add cookie support
     }
     
     def extract():
@@ -109,6 +123,7 @@ async def download_video(
         'postprocessors': postprocessors,
         'max_filesize': MAX_FILE_SIZE_MB * 1024 * 1024,
         'merge_output_format': 'mp4' if format_type != "audio" else None,
+        **get_cookie_opts(),  # Add cookie support
     }
     
     def download():

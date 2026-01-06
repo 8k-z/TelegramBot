@@ -50,6 +50,11 @@ VIDEO_QUALITY_PRESETS = {
     "1080p": {"resolution": "1920x1080", "label": "1080p (Full HD)"},
 }
 
+# Cookie settings for yt-dlp (to bypass rate limits)
+# Set the browser to extract cookies from, or provide a cookies file path
+COOKIES_FROM_BROWSER = os.getenv("COOKIES_FROM_BROWSER", "chrome")  # chrome, firefox, edge, opera, brave
+COOKIES_FILE = os.getenv("COOKIES_FILE", "")  # Path to cookies.txt file (Netscape format)
+
 # Copyright reminder message
 COPYRIGHT_REMINDER = (
     "⚠️ **Important Reminder:**\n"
