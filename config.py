@@ -59,10 +59,10 @@ COOKIES_FILE = os.getenv("COOKIES_FILE", str(BASE_DIR / "cookies.txt"))  # Path 
 # Format: http://user:pass@ip:port
 # Multiple proxies will be tried in order if one fails
 PROXY_URLS = os.getenv("PROXY_URLS", "").split(",") if os.getenv("PROXY_URLS") else [
-    # Top 3 fastest Webshare proxies
-    "http://uggkklqa:wkosqgop5ht5@198.105.121.200:6462",  # 2.76s
-    "http://uggkklqa:wkosqgop5ht5@64.137.96.74:6641",     # 2.84s  
-    "http://uggkklqa:wkosqgop5ht5@84.247.60.125:6095",    # 3.35s
+    # Working Webshare proxies (tested)
+    "http://uggkklqa:wkosqgop5ht5@142.111.48.253:7030",   # CONFIRMED WORKING
+    "http://uggkklqa:wkosqgop5ht5@198.105.121.200:6462",
+    "http://uggkklqa:wkosqgop5ht5@64.137.96.74:6641",
 ]
 
 # Copyright reminder message
