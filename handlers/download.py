@@ -121,17 +121,34 @@ async def handle_url_message(update: Update, context: ContextTypes.DEFAULT_TYPE)
             f"Select download format:"
         )
         
-        await processing_msg.edit_text(
-            info_message,
-            parse_mode="MarkdownV2",
-            reply_markup=reply_markup
-        )
+        # Try with MarkdownV2, fallback to plain text
+        try:
+            await processing_msg.edit_text(
+                info_message,
+                parse_mode="MarkdownV2",
+                reply_markup=reply_markup
+            )
+        except Exception:
+            # Fallback to plain text if Markdown fails
+            plain_message = (
+                f"{platform_emoji} {info['platform']} Video Found!\n\n"
+                f"📝 Title: {info['title'][:100]}\n"
+                f"👤 Uploader: {info['uploader']}\n"
+                f"⏱️ Duration: {duration}\n"
+                f"👁️ Views: {views}\n\n"
+                f"⚠️ Reminder: Only download content you have rights to use.\n\n"
+                f"Select download format:"
+            )
+            await processing_msg.edit_text(
+                plain_message,
+                reply_markup=reply_markup
+            )
         
     except Exception as e:
         error_msg = str(e)
         if "Video unavailable" in error_msg or "Private video" in error_msg:
             await processing_msg.edit_text(
-                "❌ **Video unavailable**\n\n"
+                "❌ Video unavailable\n\n"
                 "This video might be private, deleted, or region-locked."
             )
         elif "Sign in" in error_msg:
