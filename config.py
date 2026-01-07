@@ -52,8 +52,8 @@ VIDEO_QUALITY_PRESETS = {
 
 # Cookie settings for yt-dlp (to bypass rate limits)
 # Set the browser to extract cookies from, or provide a cookies file path
-COOKIES_FROM_BROWSER = os.getenv("COOKIES_FROM_BROWSER", "chrome")  # chrome, firefox, edge, opera, brave
-COOKIES_FILE = os.getenv("COOKIES_FILE", "")  # Path to cookies.txt file (Netscape format)
+COOKIES_FROM_BROWSER = os.getenv("COOKIES_FROM_BROWSER", "")  # chrome, firefox, edge, opera, brave (empty = disabled)
+COOKIES_FILE = os.getenv("COOKIES_FILE", str(BASE_DIR / "cookies.txt"))  # Path to cookies.txt file (Netscape format)
 
 # Copyright reminder message
 COPYRIGHT_REMINDER = (
