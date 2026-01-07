@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 import yt_dlp
 
-from config import TEMP_DIR, MAX_FILE_SIZE_MB, COOKIES_FROM_BROWSER, COOKIES_FILE, BASE_DIR
+from config import TEMP_DIR, MAX_FILE_SIZE_MB, COOKIES_FROM_BROWSER, COOKIES_FILE, BASE_DIR, PROXY_URLS
 
 
 def get_cookie_opts(url: str = "") -> dict:
@@ -30,15 +30,32 @@ def get_cookie_opts(url: str = "") -> dict:
     if "instagram.com" in url.lower() or "instagr.am" in url.lower():
         if instagram_cookies.exists():
             opts['cookiefile'] = str(instagram_cookies)
-            return opts
+    else:
+        # Use default cookies file for YouTube and others
+        if COOKIES_FILE and Path(COOKIES_FILE).exists():
+            opts['cookiefile'] = COOKIES_FILE
+        elif youtube_cookies.exists():
+            opts['cookiefile'] = str(youtube_cookies)
+        elif COOKIES_FROM_BROWSER:
+            opts['cookiesfrombrowser'] = (COOKIES_FROM_BROWSER, None, None, None)
     
-    # Use default cookies file for YouTube and others
-    if COOKIES_FILE and Path(COOKIES_FILE).exists():
-        opts['cookiefile'] = COOKIES_FILE
-    elif youtube_cookies.exists():
-        opts['cookiefile'] = str(youtube_cookies)
-    elif COOKIES_FROM_BROWSER:
-        opts['cookiesfrombrowser'] = (COOKIES_FROM_BROWSER, None, None, None)
+    return opts
+
+
+def get_download_opts(url: str = "", proxy_index: int = 0) -> dict:
+    """
+    Get yt-dlp options including cookies and proxy.
+    
+    Args:
+        url: The URL being accessed
+        proxy_index: Which proxy to use from PROXY_URLS list
+    """
+    opts = get_cookie_opts(url)
+    
+    # Add proxy for YouTube (they block datacenter IPs)
+    if PROXY_URLS and ("youtube.com" in url.lower() or "youtu.be" in url.lower()):
+        if proxy_index < len(PROXY_URLS):
+            opts['proxy'] = PROXY_URLS[proxy_index]
     
     return opts
 
@@ -53,6 +70,7 @@ def get_user_download_dir(user_id: int) -> Path:
 async def get_video_info(url: str) -> Dict[str, Any]:
     """
     Get video information without downloading.
+    Uses proxy fallback for YouTube URLs.
     
     Args:
         url: Video URL
@@ -60,30 +78,46 @@ async def get_video_info(url: str) -> Dict[str, Any]:
     Returns:
         Dictionary with video metadata
     """
-    ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
-        'extract_flat': False,
-        **get_cookie_opts(url),  # Add cookie support with URL for platform detection
-    }
+    is_youtube = "youtube.com" in url.lower() or "youtu.be" in url.lower()
+    max_retries = len(PROXY_URLS) if is_youtube and PROXY_URLS else 1
+    last_error = None
     
-    def extract():
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            return ydl.extract_info(url, download=False)
+    for proxy_index in range(max_retries):
+        ydl_opts = {
+            'quiet': True,
+            'no_warnings': True,
+            'extract_flat': False,
+            **get_download_opts(url, proxy_index),
+        }
+        
+        def extract():
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                return ydl.extract_info(url, download=False)
+        
+        try:
+            loop = asyncio.get_event_loop()
+            info = await loop.run_in_executor(None, extract)
+            
+            return {
+                'title': info.get('title', 'Unknown'),
+                'duration': info.get('duration', 0),
+                'uploader': info.get('uploader', 'Unknown'),
+                'view_count': info.get('view_count', 0),
+                'platform': info.get('extractor', 'Unknown'),
+                'thumbnail': info.get('thumbnail'),
+                'formats': info.get('formats', []),
+                'url': url,
+            }
+        except Exception as e:
+            last_error = e
+            # If it's a bot detection error and we have more proxies, try next
+            if "Sign in to confirm" in str(e) and proxy_index < max_retries - 1:
+                continue
+            raise
     
-    loop = asyncio.get_event_loop()
-    info = await loop.run_in_executor(None, extract)
-    
-    return {
-        'title': info.get('title', 'Unknown'),
-        'duration': info.get('duration', 0),
-        'uploader': info.get('uploader', 'Unknown'),
-        'view_count': info.get('view_count', 0),
-        'platform': info.get('extractor', 'Unknown'),
-        'thumbnail': info.get('thumbnail'),
-        'formats': info.get('formats', []),
-        'url': url,
-    }
+    # If all proxies failed, raise the last error
+    if last_error:
+        raise last_error
 
 
 async def download_video(
@@ -141,7 +175,7 @@ async def download_video(
         'postprocessors': postprocessors,
         'max_filesize': MAX_FILE_SIZE_MB * 1024 * 1024,
         'merge_output_format': 'mp4' if format_type != "audio" else None,
-        **get_cookie_opts(url),  # Add cookie support with URL for platform detection
+        **get_download_opts(url),  # Add cookie and proxy support
     }
     
     def download():

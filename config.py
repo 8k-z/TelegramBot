@@ -55,6 +55,16 @@ VIDEO_QUALITY_PRESETS = {
 COOKIES_FROM_BROWSER = os.getenv("COOKIES_FROM_BROWSER", "")  # chrome, firefox, edge, opera, brave (empty = disabled)
 COOKIES_FILE = os.getenv("COOKIES_FILE", str(BASE_DIR / "cookies.txt"))  # Path to cookies.txt file (Netscape format)
 
+# Proxy settings for yt-dlp (to bypass IP blocks on YouTube)
+# Format: http://user:pass@ip:port
+# Multiple proxies will be tried in order if one fails
+PROXY_URLS = os.getenv("PROXY_URLS", "").split(",") if os.getenv("PROXY_URLS") else [
+    # Top 3 fastest Webshare proxies
+    "http://uggkklqa:wkosqgop5ht5@198.105.121.200:6462",  # 2.76s
+    "http://uggkklqa:wkosqgop5ht5@64.137.96.74:6641",     # 2.84s  
+    "http://uggkklqa:wkosqgop5ht5@84.247.60.125:6095",    # 3.35s
+]
+
 # Copyright reminder message
 COPYRIGHT_REMINDER = (
     "⚠️ **Important Reminder:**\n"
