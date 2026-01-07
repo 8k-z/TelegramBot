@@ -132,21 +132,19 @@ async def handle_url_message(update: Update, context: ContextTypes.DEFAULT_TYPE)
         if "Video unavailable" in error_msg or "Private video" in error_msg:
             await processing_msg.edit_text(
                 "❌ **Video unavailable**\n\n"
-                "This video might be private, deleted, or region-locked.",
-                parse_mode="Markdown"
+                "This video might be private, deleted, or region-locked."
             )
         elif "Sign in" in error_msg:
             await processing_msg.edit_text(
-                "❌ **Login required**\n\n"
-                "This content requires authentication and cannot be downloaded.",
-                parse_mode="Markdown"
+                "❌ Login required\n\n"
+                "This content requires authentication and cannot be downloaded."
             )
         else:
+            # Don't use parse_mode to avoid issues with special characters in error
             await processing_msg.edit_text(
-                f"❌ **Failed to fetch video info**\n\n"
-                f"Error: `{error_msg[:200]}`\n\n"
-                "Please try a different URL.",
-                parse_mode="Markdown"
+                f"❌ Failed to fetch video info\n\n"
+                f"Error: {error_msg[:200]}\n\n"
+                "Please try a different URL."
             )
 
 
