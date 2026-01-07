@@ -52,9 +52,13 @@ def get_download_opts(url: str = "", proxy_index: int = 0) -> dict:
     """
     opts = get_cookie_opts(url)
     
-    # Add proxy for YouTube (they block datacenter IPs)
-    if PROXY_URLS and ("youtube.com" in url.lower() or "youtu.be" in url.lower()):
-        if proxy_index < len(PROXY_URLS):
+    # Add proxy and JS runtime for YouTube (they block datacenter IPs and require JS)
+    if "youtube.com" in url.lower() or "youtu.be" in url.lower():
+        # Use Node.js for YouTube's JavaScript challenges
+        opts['extractor_args'] = {'youtube': {'player_client': ['android_sdkless', 'web_safari']}}
+        
+        # Add proxy if available
+        if PROXY_URLS and proxy_index < len(PROXY_URLS):
             opts['proxy'] = PROXY_URLS[proxy_index]
     
     return opts
