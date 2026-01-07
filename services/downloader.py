@@ -9,16 +9,34 @@ from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 import yt_dlp
 
-from config import TEMP_DIR, MAX_FILE_SIZE_MB, COOKIES_FROM_BROWSER, COOKIES_FILE
+from config import TEMP_DIR, MAX_FILE_SIZE_MB, COOKIES_FROM_BROWSER, COOKIES_FILE, BASE_DIR
 
 
-def get_cookie_opts() -> dict:
-    """Get yt-dlp options for cookie authentication."""
+def get_cookie_opts(url: str = "") -> dict:
+    """
+    Get yt-dlp options for cookie authentication.
+    Uses platform-specific cookies if available.
+    
+    Args:
+        url: The URL being accessed (to determine which cookies to use)
+    """
     opts = {}
     
-    # Prefer cookies file if provided
+    # Check for platform-specific cookie files
+    instagram_cookies = BASE_DIR / "instagram-cookies.txt"
+    youtube_cookies = BASE_DIR / "cookies.txt"  # Default/YouTube cookies
+    
+    # Determine which cookie file to use based on URL
+    if "instagram.com" in url.lower() or "instagr.am" in url.lower():
+        if instagram_cookies.exists():
+            opts['cookiefile'] = str(instagram_cookies)
+            return opts
+    
+    # Use default cookies file for YouTube and others
     if COOKIES_FILE and Path(COOKIES_FILE).exists():
         opts['cookiefile'] = COOKIES_FILE
+    elif youtube_cookies.exists():
+        opts['cookiefile'] = str(youtube_cookies)
     elif COOKIES_FROM_BROWSER:
         opts['cookiesfrombrowser'] = (COOKIES_FROM_BROWSER, None, None, None)
     
@@ -46,7 +64,7 @@ async def get_video_info(url: str) -> Dict[str, Any]:
         'quiet': True,
         'no_warnings': True,
         'extract_flat': False,
-        **get_cookie_opts(),  # Add cookie support
+        **get_cookie_opts(url),  # Add cookie support with URL for platform detection
     }
     
     def extract():
@@ -123,7 +141,7 @@ async def download_video(
         'postprocessors': postprocessors,
         'max_filesize': MAX_FILE_SIZE_MB * 1024 * 1024,
         'merge_output_format': 'mp4' if format_type != "audio" else None,
-        **get_cookie_opts(),  # Add cookie support
+        **get_cookie_opts(url),  # Add cookie support with URL for platform detection
     }
     
     def download():
