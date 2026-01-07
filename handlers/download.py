@@ -6,6 +6,7 @@ Handles URL-based video downloads from YouTube, Instagram, TikTok, etc.
 import re
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
+from telegram.helpers import escape_markdown
 
 from config import COPYRIGHT_REMINDER, MAX_FILE_SIZE_MB
 from services.downloader import (
@@ -17,6 +18,14 @@ from services.downloader import (
     get_platform_emoji,
 )
 from services.cleanup import secure_delete
+
+
+def safe_text(text: str) -> str:
+    """Escape text for Telegram MarkdownV2 format."""
+    if not text:
+        return "Unknown"
+    # Escape special markdown characters
+    return escape_markdown(str(text), version=2)
 
 
 # URL regex pattern
@@ -97,19 +106,24 @@ async def handle_url_message(update: Update, context: ContextTypes.DEFAULT_TYPE)
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
+        # Escape title and uploader for Markdown
+        safe_title = safe_text(info['title'][:100])
+        safe_uploader = safe_text(info['uploader'])
+        safe_platform = safe_text(info['platform'])
+        
         info_message = (
-            f"{platform_emoji} **{info['platform']}** Video Found!\n\n"
-            f"📝 **Title:** {info['title'][:100]}{'...' if len(info['title']) > 100 else ''}\n"
-            f"👤 **Uploader:** {info['uploader']}\n"
-            f"⏱️ **Duration:** {duration}\n"
-            f"👁️ **Views:** {views}\n\n"
-            f"⚠️ **Reminder:** Only download content you have rights to use.\n\n"
+            f"{platform_emoji} *{safe_platform}* Video Found\\!\n\n"
+            f"📝 *Title:* {safe_title}\n"
+            f"👤 *Uploader:* {safe_uploader}\n"
+            f"⏱️ *Duration:* {duration}\n"
+            f"👁️ *Views:* {views}\n\n"
+            f"⚠️ *Reminder:* Only download content you have rights to use\\.\n\n"
             f"Select download format:"
         )
         
         await processing_msg.edit_text(
             info_message,
-            parse_mode="Markdown",
+            parse_mode="MarkdownV2",
             reply_markup=reply_markup
         )
         
