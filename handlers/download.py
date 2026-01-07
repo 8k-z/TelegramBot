@@ -210,14 +210,20 @@ async def download_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
                     audio=f,
                     filename=filepath.name,
                     title=info.get('title', 'Audio')[:64],
-                    caption=f"🎵 {info.get('title', 'Audio')[:100]}"
+                    caption=f"🎵 {info.get('title', 'Audio')[:100]}",
+                    read_timeout=1800,  # 30 minutes for large files
+                    write_timeout=1800,
+                    connect_timeout=60,
                 )
             else:
                 await context.bot.send_video(
                     chat_id=query.message.chat_id,
                     video=f,
                     filename=filepath.name,
-                    caption=f"🎬 {info.get('title', 'Video')[:100]}"
+                    caption=f"🎬 {info.get('title', 'Video')[:100]}",
+                    read_timeout=1800,  # 30 minutes for large files
+                    write_timeout=1800,
+                    connect_timeout=60,
                 )
         
         await query.edit_message_text(
