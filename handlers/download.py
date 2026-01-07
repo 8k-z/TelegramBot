@@ -176,10 +176,7 @@ async def download_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     if data == "dl_cancel":
         context.user_data.pop('pending_url', None)
         context.user_data.pop('video_info', None)
-        await query.edit_message_text(
-            "✅ **Download cancelled.**",
-            parse_mode="Markdown"
-        )
+        await query.edit_message_text("✅ Download cancelled.")
         return
     
     url = context.user_data.get('pending_url')
@@ -201,10 +198,9 @@ async def download_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     
     # Show downloading progress
     await query.edit_message_text(
-        f"⬇️ **Downloading {format_label}...**\n\n"
+        f"⬇️ Downloading {format_label}...\n\n"
         f"📝 {video_info['title'][:50]}...\n\n"
-        "This may take a moment...",
-        parse_mode="Markdown"
+        "This may take a moment..."
     )
     
     filepath = None
@@ -216,21 +212,17 @@ async def download_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         file_size = filepath.stat().st_size
         if file_size > MAX_FILE_SIZE_MB * 1024 * 1024:
             await query.edit_message_text(
-                f"❌ **File too large!**\n\n"
+                f"❌ File too large!\n\n"
                 f"Size: {file_size / (1024*1024):.1f} MB\n"
                 f"Telegram limit: {MAX_FILE_SIZE_MB} MB\n\n"
-                "Try a lower quality or audio-only.",
-                parse_mode="Markdown"
+                "Try a lower quality or audio-only."
             )
             if filepath:
                 await secure_delete(filepath)
             return
         
         # Upload to Telegram
-        await query.edit_message_text(
-            f"📤 **Uploading {format_label}...**",
-            parse_mode="Markdown"
-        )
+        await query.edit_message_text(f"📤 Uploading {format_label}...")
         
         with open(filepath, 'rb') as f:
             if format_type == "audio":
@@ -256,18 +248,16 @@ async def download_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
                 )
         
         await query.edit_message_text(
-            f"✅ **Download complete!**\n\n"
+            f"✅ Download complete!\n\n"
             f"📝 {info.get('title', 'Media')[:100]}\n\n"
-            "Send another URL to download more!",
-            parse_mode="Markdown"
+            "Send another URL to download more!"
         )
         
     except Exception as e:
         await query.edit_message_text(
-            f"❌ **Download failed**\n\n"
-            f"Error: `{str(e)[:200]}`\n\n"
-            "Please try again or use a different quality.",
-            parse_mode="Markdown"
+            f"❌ Download failed\n\n"
+            f"Error: {str(e)[:200]}\n\n"
+            "Please try again or use a different quality."
         )
     finally:
         # Clean up
